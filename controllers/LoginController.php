@@ -2,10 +2,12 @@
 
 namespace Controllers;
 
+use Model\Usuario;
 use MVC\Router;
 
 class LoginController
 {
+    //Definimos los métodos
     public static function login(Router $router)
     {
 
@@ -26,15 +28,20 @@ class LoginController
     }
     public static function crear(Router $router)
     {
-
-
+        $usuario = new Usuario;
+        $alertas = [];
+        
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
+            $usuario->sincronizar($_POST);
+            
+            $alertas = $usuario->validarNuevaCuenta();
         }
 
         //Renderizar la vista
         $router->render('auth/crear', [
-            'titulo' => 'Crear cuenta'
+            'titulo' => 'Crear cuenta',
+            'usuario' => $usuario,
+            'alertas' => $alertas
         ]);
     }
 
@@ -64,15 +71,27 @@ class LoginController
                     ]);
     }
 
-    public static function mensaje()
+    public static function mensaje(Router $router)
     {
-        echo "Desde el controlador de mensaje";
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
+        }
+
+                //Renderizar la vista
+                $router->render('auth/mensaje', [
+                    'titulo' => 'Cuenta Creada Correctamente'
+                    ]);
     }
 
-    public static function confirmar()
+    public static function confirmar(Router $router)
     {
-        echo "Desde el controlador de confirmar";
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
+        }
+
+                //Renderizar la vista
+                $router->render('auth/confirmar', [
+                    'titulo' => 'Confirma tu cuenta UpTask'
+                    ]);
     }
 }

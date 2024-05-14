@@ -1,0 +1,13 @@
+@use 'base/variables' as v;
+@use 'base/mixins' as m;
+
+.login {
+    margin-top: 5rem;
+
+    .uptask {
+        @include m.textoDegradado(v.$cyan);
+    }
+
+    @include m.colorInputColor(v.$cyan, v.$blanco);
+    
+}
