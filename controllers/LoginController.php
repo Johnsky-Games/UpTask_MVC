@@ -2,6 +2,7 @@
 
 namespace Controllers;
 
+use Classes\Email;
 use MVC\Router;
 use Model\Usuario;
 
@@ -30,11 +31,36 @@ class LoginController
     {
         $usuario = new Usuario;
         $alertas = [];
-        
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $usuario->sincronizar($_POST);
-            debuguear($usuario);
             $alertas = $usuario->validarNuevaCuenta();
+
+
+            if (empty($alertas)) {
+                $existeUsuario = Usuario::where('email', $usuario->email);
+
+                if ($existeUsuario) {
+                    Usuario::setAlerta('error', 'El usuario ya está registrado');
+                    $alertas = Usuario::getAlertas();
+                } else {
+                    //Crear nuevo usuario
+                    //Hashear el password
+                    $usuario->hashPassword();
+                    //Eliminar el password2
+                    unset($usuario->password2);
+                    //Crear un token
+                    $usuario->crearToken();
+                    $resultado = $usuario->guardar();
+                    //Enviar email
+                    $email = new Email($usuario->email, $usuario->nombre, $usuario->token);
+                    $email->enviarConfirmacion();
+
+                    if ($resultado) {
+                        header('Location: /mensaje');
+                    }
+                }
+            }
         }
 
         //Renderizar la vista
@@ -47,15 +73,45 @@ class LoginController
 
     public static function olvide(Router $router)
     {
-
+        $alertas = [];
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $usuario = new Usuario($_POST);
+            $alertas = $usuario->validarEmail();
 
+            if (empty($alertas)) {
+                //Buscar el usuario
+                $usuario = Usuario::where('email', $usuario->email);
+
+                //Encontre el usuario
+                if ($usuario && $usuario->confirmado) {
+
+                    //Generar un nuevo token
+
+                    $usuario->crearToken();
+                    unset($usuario->password2);
+
+                    //Actualizar el usuario
+                    $usuario->guardar();
+
+                    //Enviar el email
+                    Usuario::setAlerta('exito', 'Se ha enviado un email con las instrucciones para recuperar tu contraseña');
+
+                    //Imprimir la alerta
+
+
+                } else {
+                    Usuario::setAlerta('error', 'El usuario no existe o no esta confirmado');
+                }
+            }
         }
-        
-                //Renderizar la vista
-                $router->render('auth/olvide', [
-                    'titulo' => 'Olvidé mi contraseña'
-                    ]);
+
+        $alertas = Usuario::getAlertas();
+
+        //Renderizar la vista
+        $router->render('auth/olvide', [
+            'titulo' => 'Olvidé mi contraseña',
+            'alertas' => $alertas
+        ]);
     }
 
     public static function reestablecer(Router $router)
@@ -65,10 +121,10 @@ class LoginController
 
         }
 
-                //Renderizar la vista
-                $router->render('auth/reestablecer', [
-                    'titulo' => 'Reestablecer contraseña'
-                    ]);
+        //Renderizar la vista
+        $router->render('auth/reestablecer', [
+            'titulo' => 'Reestablecer contraseña'
+        ]);
     }
 
     public static function mensaje(Router $router)
@@ -77,21 +133,43 @@ class LoginController
 
         }
 
-                //Renderizar la vista
-                $router->render('auth/mensaje', [
-                    'titulo' => 'Cuenta Creada Correctamente'
-                    ]);
+        //Renderizar la vista
+        $router->render('auth/mensaje', [
+            'titulo' => 'Cuenta Creada Correctamente'
+        ]);
     }
 
     public static function confirmar(Router $router)
     {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $token = s($_GET['token']);
 
+        if (!$token)
+            header('Location: /');
+
+        //Encontrar el usuario con el token
+        $usuario = Usuario::where('token', $token);
+        if (empty($usuario)) {
+            //No se encontró el usuario con el token
+            Usuario::setAlerta('error', 'Token no válido');
+        } else {
+            //Confirmar la cuenta
+            $usuario->confirmado = 1;
+            $usuario->token = null;
+            unset($usuario->password2);
+
+            //Guardar en la base de datos
+            $usuario->guardar();
+
+            //Mensaje de confirmación
+            Usuario::setAlerta('exito', 'Cuenta confirmada correctamente');
         }
 
-                //Renderizar la vista
-                $router->render('auth/confirmar', [
-                    'titulo' => 'Confirma tu cuenta UpTask'
-                    ]);
+        $alertas = Usuario::getAlertas();
+
+        //Renderizar la vista
+        $router->render('auth/confirmar', [
+            'titulo' => 'Confirma tu cuenta UpTask',
+            'alertas' => $alertas
+        ]);
     }
 }
