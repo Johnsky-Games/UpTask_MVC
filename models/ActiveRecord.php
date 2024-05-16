@@ -8,6 +8,12 @@ class ActiveRecord {
     protected static $columnasDB = [];
 
     public $id;
+    public $nombre;
+    public $email;
+    public $password;
+    public $password2;
+    public $token;
+    public $confirmado;
 
     // Alertas y Mensajes
     protected static $alertas = [];

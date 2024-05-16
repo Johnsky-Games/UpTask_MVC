@@ -2,9 +2,9 @@
 
 namespace Controllers;
 
-use Classes\Email;
 use MVC\Router;
 use Model\Usuario;
+use Classes\Email;
 
 class LoginController
 {
@@ -94,10 +94,13 @@ class LoginController
                     $usuario->guardar();
 
                     //Enviar el email
-                    Usuario::setAlerta('exito', 'Se ha enviado un email con las instrucciones para recuperar tu contraseña');
+
+                    $email = new Email($usuario->email, $usuario->nombre, $usuario->token);
+                    $email->enviarInstrucciones();
 
                     //Imprimir la alerta
 
+                    Usuario::setAlerta('exito', 'Se ha enviado un email con las instrucciones para recuperar tu contraseña');
 
                 } else {
                     Usuario::setAlerta('error', 'El usuario no existe o no esta confirmado');
@@ -116,14 +119,19 @@ class LoginController
 
     public static function reestablecer(Router $router)
     {
-
+        $alertas = [];
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
+            $usuario = new Usuario($_POST);
+            $alertas = $usuario->validarPassword();
+            if(empty(($alertas))) {
+                $usuario = Usuario::where('token', $_POST['token']);
+            }
         }
 
         //Renderizar la vista
         $router->render('auth/reestablecer', [
-            'titulo' => 'Reestablecer contraseña'
+            'titulo' => 'Reestablecer contraseña',
+            'alertas' => $alertas
         ]);
     }
 
