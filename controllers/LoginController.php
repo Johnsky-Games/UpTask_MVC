@@ -11,20 +11,55 @@ class LoginController
     //Definimos los métodos
     public static function login(Router $router)
     {
+        $alertas = [];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $usuario = new Usuario($_POST);
+            $alertas = $usuario->validarLogin();
+
+            if (empty($alertas)) {
+                //Comprobar si el usuario existe
+                $usuario = Usuario::where('email', $usuario->email);
+
+                if (!$usuario || !$usuario->confirmado) {
+                    Usuario::setAlerta('error', 'El usuario no existe o no está confirmado');
+                } else {
+                    //El usuario existe
+                    //Verificar el password
+                    if (password_verify($_POST['password'], $usuario->password)) {
+                        //Inicio de sesión
+                        session_start();
+                        $_SESSION['id'] = $usuario->id;
+                        $_SESSION['nombre'] = $usuario->nombre;
+                        $_SESSION['email'] = $usuario->email;
+                        $_SESSION['login'] = true;
+
+                        //Redireccionar 
+                        header('Location: /dashboard');
+
+                    } else {
+                        Usuario::setAlerta('error', 'El password es incorrecto');
+                    }
+                }
+            }
 
         }
 
+        $alertas = Usuario::getAlertas();
+
         //Renderizar la vista
         $router->render('auth/login', [
-            'titulo' => 'Iniciar sesión'
+            'titulo' => 'Iniciar sesión',
+            'alertas' => $alertas
         ]);
     }
 
     public static function logout()
     {
-        echo "Desde el controlador de logout";
+        session_start();
+        $_SESSION = [];
+        
+        header('Location: /');
 
     }
     public static function crear(Router $router)
@@ -120,18 +155,47 @@ class LoginController
     public static function reestablecer(Router $router)
     {
         $alertas = [];
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $usuario = new Usuario($_POST);
-            $alertas = $usuario->validarPassword();
-            if(empty(($alertas))) {
-                $usuario = Usuario::where('token', $_POST['token']);
-            }
+
+        $token = s($_GET['token']);
+        $mostrar = true;
+
+        if (!$token)
+            header('Location: /');
+
+        //Identificar el usuario con el token
+        $usuario = Usuario::where('token', $token);
+
+        if (empty(($usuario))) {
+            Usuario::setAlerta('error', 'Token no válido');
+            $mostrar = false;
         }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            //Leer el nuevo password
+            $usuario->sincronizar($_POST);
+            $alertas = $usuario->validarPassword();
+            unset($usuario->password2);
+
+            if (empty($alertas)) {
+                $usuario->hashPassword();
+                $usuario->token = null;
+
+                $resultado = $usuario->guardar();
+
+                if ($resultado) {
+                    header('Location: /');
+                }
+            }
+
+        }
+
+        $alertas = Usuario::getAlertas();
 
         //Renderizar la vista
         $router->render('auth/reestablecer', [
             'titulo' => 'Reestablecer contraseña',
-            'alertas' => $alertas
+            'alertas' => $alertas,
+            'mostrar' => $mostrar
         ]);
     }
 

@@ -29,6 +29,26 @@ class Usuario extends ActiveRecord
         $this->confirmado = $args['confirmado'] ?? 0;
     }
 
+    //Validar el login
+    public function validarLogin()
+    {
+        if (!$this->email) {
+            self::$alertas['error'][] = "El email es obligatorio";
+        }
+
+        if (!filter_var($this->email, FILTER_VALIDATE_EMAIL)) {
+            self::$alertas['error'][] = "Debes añadir un correo válido";
+        }
+
+        if (!$this->password) {
+            self::$alertas['error'][] = "El password es obligatorio";
+        }
+        
+        
+
+        return self::$alertas;
+    }
+
     //Validación para cuentas nuevas
     public function validarNuevaCuenta()
     {
@@ -53,18 +73,6 @@ class Usuario extends ActiveRecord
         }
 
         return self::$alertas;
-    }
-
-    //Hashea el password
-    public function hashPassword()
-    {
-        $this->password = password_hash($this->password, PASSWORD_BCRYPT);
-    }
-
-    //Generar token
-    public function crearToken()
-    {
-        $this->token = md5(uniqid(mt_rand()));
     }
 
     //Valida el email
@@ -93,5 +101,17 @@ class Usuario extends ActiveRecord
         }
 
         return self::$alertas;
+    }
+
+    //Generar token
+    public function crearToken()
+    {
+        $this->token = md5(uniqid(mt_rand()));
+    }
+
+    //Hashea el password
+    public function hashPassword()
+    {
+        $this->password = password_hash($this->password, PASSWORD_BCRYPT);
     }
 }
