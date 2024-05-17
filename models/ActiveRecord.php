@@ -9,14 +9,6 @@ class ActiveRecord
     protected static $tabla = '';
     protected static $columnasDB = [];
 
-    public $id;
-    public $nombre;
-    public $email;
-    public $password;
-    public $password2;
-    public $token;
-    public $confirmado;
-
     // Alertas y Mensajes
     protected static $alertas = [];
 
@@ -85,6 +77,14 @@ class ActiveRecord
         $query = "SELECT * FROM " . static::$tabla . " WHERE " . $columna . " = '" . $valor . "'";
         $resultado = self::consultarSQL($query);
         return array_shift($resultado);
+    }
+
+    // Busqueda todos los registros que pertenece a un Id
+    public static function belongsTo($columna, $valor)
+    {
+        $query = "SELECT * FROM " . static::$tabla . " WHERE " . $columna . " = '" . $valor . "'";
+        $resultado = self::consultarSQL($query);
+        return $resultado;
     }
 
     // SQL para Consultas Avanzadas.
