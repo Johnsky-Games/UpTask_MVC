@@ -21,10 +21,12 @@
             padding: .7rem;
             transition-property: backgroun-color;
             transition-duration: .3s;
+            text-transform: uppercase;
             font-weight: 700;
             font-size: 1.5rem;
 
-            &:hover {
+            &:hover,
+            &.activo {
                 background-color: darken(v.$indigo, 20%);
                 border-radius: .5rem;
             }

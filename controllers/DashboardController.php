@@ -10,12 +10,26 @@ class DashboardController
     {
         session_start();
 
-        if (!isset($_SESSION['login'])) {
-            header('Location: /');
-        }
+        isAuth(); // Si no está autenticado, lo redirige al login
         
         $router->render('dashboard/index', [
-            'titulo' => 'Dashboard'
+            'titulo' => 'Proyectos'
+        ]);
+    }
+
+    public static function crear_proyecto (Router $router) {
+        session_start();
+        
+        $router->render ('dashboard/crear-proyecto', [
+            'titulo' => 'Nuevo Proyecto'
+        ]);
+    }
+
+    public static function perfil (Router $router) {
+        session_start();
+        
+        $router->render ('dashboard/perfil', [
+            'titulo' => 'Perfil'
         ]);
     }
 }
