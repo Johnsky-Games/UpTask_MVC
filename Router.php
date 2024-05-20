@@ -30,9 +30,26 @@ class Router
         }
 
 
-        if ( $fn ) {
-            // Call user fn va a llamar una función cuando no sabemos cual sera
-            call_user_func($fn, $this); // This es para pasar argumentos
+        if ($fn) {
+            // Ensure the callback is an array with class and method
+            if (is_array($fn)) {
+                [$controllerName, $methodName] = $fn;
+
+                if (class_exists($controllerName)) {
+                    $controller = new $controllerName();
+                    
+                    if (method_exists($controller, $methodName)) {
+                        call_user_func([$controller, $methodName], $this);
+                    } else {
+                        echo "Method $methodName not found in controller $controllerName";
+                    }
+                } else {
+                    echo "Controller class $controllerName not found";
+                }
+            } else {
+                // Handle other types of callables
+                call_user_func($fn, $this);
+            }
         } else {
             echo "Página No Encontrada o Ruta no válida";
         }
