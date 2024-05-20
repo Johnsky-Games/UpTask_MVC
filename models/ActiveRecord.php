@@ -171,7 +171,7 @@ class ActiveRecord
 
         foreach ($registro as $key => $value) {
             if (property_exists($objeto, $key)) {
-                $objeto->$key = $value;
+                $objeto->$key = trim($value);
             }
         }
 
