@@ -4,12 +4,30 @@
     // Obtener las tareas del proyecto
     obtenerTareas();
     let tareas = [];
+    let filtradas = [];
 
     //Boton para mostrar el modal de nueva tarea
     const btnNuevaTarea = document.querySelector('#agregar-tarea');
     btnNuevaTarea.addEventListener('click', function () {
         mostrarFormulario();
     });
+
+    //Filtros de busqueda de tareas
+    const filtros = document.querySelectorAll('#filtros input[type="radio"]');
+    filtros.forEach(radio => {
+        radio.addEventListener('input', filtrarTareas);
+    })
+
+    function filtrarTareas(e) {
+        const filtro = e.target.value;
+        if (filtro !== '') {
+            filtradas = tareas.filter(tarea => tarea.estado === filtro);
+
+        } else {
+            filtradas = [];
+        }
+        console.log(filtradas);
+    }
 
     async function obtenerTareas() {
         try {

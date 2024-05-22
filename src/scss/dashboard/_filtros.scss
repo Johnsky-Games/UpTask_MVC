@@ -6,12 +6,6 @@
     margin-top: 2rem;
     border-radius: 1rem;
     padding: 2rem;
-    display: flex;
-
-    @include m.tablet {
-        flex-direction: column;
-    }
-
 
     .filtros-inputs {
         @include m.tablet {
