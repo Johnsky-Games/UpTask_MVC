@@ -116,16 +116,52 @@ class DashboardController
         ]);
     }
 
-    public static function cambiar_password(Router $router) {
+    public static function cambiar_password(Router $router)
+    {
         session_start();
         isAuth(); // Si no está autenticado, lo redirige al login
         $alertas = [];
         $usuario = Usuario::find($_SESSION['id']);
-        
-    $router->render('dashboard/cambiar-password', [
-        'titulo' => 'Cambiar Contraseña',
-        'alertas' => $alertas,
-        'usuario' => $usuario
-    ]);
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            //Sincronizar los datos con el objeto usuario
+            $usuario->sincronizar($_POST);
+            $alertas = $usuario->nuevoPassword();
+
+            if (empty($alertas)) {
+                $resultado = $usuario->comprobar_password();
+
+                if ($resultado) {
+                    $usuario->password = $usuario->password_nuevo;
+
+                    //Eliminar los campos que no existen en la base de datos
+                    unset($usuario->password_actual);
+                    unset($usuario->password_nuevo);
+
+                    //Hashear el password
+                    $usuario->hashPassword();
+
+                    //Actualizar en la base de datos
+                    $resultado = $usuario->guardar();
+
+                    if ($resultado) {
+                        Usuario::setAlerta('exito', 'Contraseña actualizada correctamente');
+                        $alertas = $usuario->getAlertas();
+                    }
+                } else {
+                    Usuario::setAlerta('error', 'El password actual no es válido');
+                    $alertas = $usuario->getAlertas();
+                }
+
+            }
+
+            // debuguear($usuario);
+        }
+
+        $router->render('dashboard/cambiar-password', [
+            'titulo' => 'Cambiar Contraseña',
+            'alertas' => $alertas,
+            'usuario' => $usuario
+        ]);
     }
 }

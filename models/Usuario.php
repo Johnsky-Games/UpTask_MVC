@@ -16,6 +16,8 @@ class Usuario extends ActiveRecord
     public $password2;
     public $token;
     public $confirmado;
+    public $password_actual;
+    public $password_nuevo;
 
     // Constructor de la clase Usuario
     public function __construct($args = [])
@@ -25,6 +27,8 @@ class Usuario extends ActiveRecord
         $this->email = $args['email'] ?? '';
         $this->password = $args['password'] ?? '';
         $this->password2 = $args['password2'] ?? '';
+        $this->password_actual = $args['password_actual'] ?? '';
+        $this->password_nuevo = $args['password_nuevo'] ?? '';
         $this->token = $args['token'] ?? '';
         $this->confirmado = $args['confirmado'] ?? 0;
     }
@@ -43,8 +47,8 @@ class Usuario extends ActiveRecord
         if (!$this->password) {
             self::$alertas['error'][] = "El password es obligatorio";
         }
-        
-        
+
+
 
         return self::$alertas;
     }
@@ -90,7 +94,7 @@ class Usuario extends ActiveRecord
 
     //Validar el password
 
-    public function validarPassword()
+    public function validarPassword() :array
     {
         if (!$this->password) {
             self::$alertas['error'][] = "El password no puede estar vacío";
@@ -104,25 +108,49 @@ class Usuario extends ActiveRecord
     }
 
     //Generar token
-    public function crearToken()
+    public function crearToken() :void
     {
         $this->token = md5(uniqid(mt_rand()));
     }
 
+    //comprueba el password
+    public function comprobar_password():bool
+    {
+        return password_verify($this->password_actual, $this->password);
+    }
+
     //Hashea el password
-    public function hashPassword()
+    public function hashPassword() :void
     {
         $this->password = password_hash($this->password, PASSWORD_BCRYPT);
     }
 
-    public function validarPerfil() {
+    public function validarPerfil(): array
+    {
         if (!$this->nombre) {
             self::$alertas['error'][] = "Debes añadir un nombre";
-        } 
-        
+        }
+
         if (!$this->email) {
             self::$alertas['error'][] = "Debes añadir un correo";
         }
+        return self::$alertas;
+    }
+
+    public function nuevoPassword(): array
+    {
+        if (!$this->password_actual) {
+            self::$alertas['error'][] = "El password actual no puede estar vacío";
+        }
+
+        if (!$this->password_nuevo) {
+            self::$alertas['error'][] = "El password nuevo no puede estar vacío";
+        }
+
+        if (strlen($this->password_nuevo) < 6) {
+            self::$alertas['error'][] = "El password debe contener al menos 6 caracteres";
+        }
+
         return self::$alertas;
     }
 }

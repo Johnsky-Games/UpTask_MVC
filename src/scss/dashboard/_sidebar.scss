@@ -100,7 +100,7 @@
         margin-top: 10rem;
 
         .cerrar-sesion {
-            @include m.boton(v.$indigo, 20%, v.$blanco);
+            @include m.boton(v.$indigo, v.$blanco);
         }
 
         @include m.tablet {
